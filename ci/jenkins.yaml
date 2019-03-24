@@ -24,17 +24,21 @@ spec:
         - containerPort:  50000
           name:  ci-slaves
       restartPolicy: Always
-      imagePullPolicy: Always
 ---
-apiVersion: v1
 kind: Service
+apiVersion: v1
 metadata:
   name: ci-master
+  namespace: default
 spec:
   selector:
-    app: ci-master
+    name: ci-master
+  type: LoadBalancer
+  sessionAffinity: None
+  externalTrafficPolicy: Cluster
   ports:
-  - port: 8080
+  - name: ci-master-dashboard
+    port: 8080
     targetPort: 8080
 ---
 apiVersion: extensions/v1beta1
@@ -52,3 +56,4 @@ spec:
       - backend:
           serviceName: ci-master
           servicePort: 8080
+
