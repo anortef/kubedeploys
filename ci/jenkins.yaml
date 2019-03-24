@@ -1,0 +1,54 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name:  ci-master
+  labels:
+    name:  ci-master
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name:  ci-master
+    spec:
+      containers:
+      - image:  jenkins:alpine
+        name:  ci-master
+        ports:
+        - containerPort:  8080
+          name:  ci-dashboard
+        - containerPort:  50000
+          name:  ci-slaves
+      restartPolicy: Always
+      imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ci-master
+spec:
+  selector:
+    app: ci-master
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ci-master
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: ci.bashlines.com
+    http:
+      paths:
+      - backend:
+          serviceName: ci-master
+          servicePort: 8080
